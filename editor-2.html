@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Tribune — Site Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:wght@300;400;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fflate/0.8.2/fflate.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #1a1a1a; --paper: #f5f0e8; --red: #c0172a; --mid: #666;
+  --rule: #2a2a2a; --ui: #f0ede6; --border: #ccc;
+}
+body { background: #e8e4dd; font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; min-height: 100vh; }
+
+/* TOP BAR */
+.topbar { background: var(--rule); color: #fff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
+.topbar .brand { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; letter-spacing: -.01em; }
+.topbar .brand span { color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 400; letter-spacing: .2em; margin-left: 12px; vertical-align: middle; }
+.topbar .site-link { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .1em; color: #ccc; text-decoration: none; }
+.topbar .site-link:hover { color: #fff; }
+
+/* LAYOUT */
+.shell { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 52px); }
+.sidebar { background: #fff; border-right: 1px solid #ddd; padding: 24px 0; }
+.sidebar h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .22em; color: var(--mid); padding: 0 20px 10px; border-bottom: 1px solid #eee; margin-bottom: 10px; }
+.article-list { list-style: none; }
+.article-list li { border-bottom: 1px solid #f0ede6; }
+.article-list button { width: 100%; text-align: left; background: none; border: none; padding: 12px 20px; cursor: pointer; font-family: 'Source Serif 4', serif; font-size: 14px; line-height: 1.35; color: var(--ink); transition: background .15s; }
+.article-list button:hover, .article-list button.active { background: var(--paper); color: var(--red); }
+.article-list button .art-section { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: .15em; color: var(--mid); margin-bottom: 3px; text-transform: uppercase; }
+.add-btn { display: block; margin: 16px; padding: 10px; background: var(--red); color: #fff; border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; width: calc(100% - 32px); text-align: center; }
+.add-btn:hover { background: #a01020; }
+
+/* MAIN EDITOR */
+.editor-main { padding: 32px 36px; }
+.editor-main h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; margin-bottom: 24px; color: var(--ink); border-bottom: 2px solid var(--rule); padding-bottom: 12px; }
+
+.field-group { margin-bottom: 22px; }
+.field-group label { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .18em; color: var(--mid); text-transform: uppercase; margin-bottom: 6px; }
+.field-group input[type=text], .field-group textarea, .field-group select {
+  width: 100%; border: 1px solid var(--border); background: #fff; padding: 9px 12px;
+  font-family: 'Source Serif 4', serif; font-size: 15px; color: var(--ink);
+  resize: vertical;
+}
+.field-group input[type=text]:focus, .field-group textarea:focus { outline: 2px solid var(--red); border-color: transparent; }
+.field-group textarea.headline-field { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; min-height: 80px; }
+.field-group textarea.body-field { min-height: 260px; font-size: 14px; line-height: 1.7; }
+.field-group textarea.deck-field { min-height: 80px; font-style: italic; }
+
+/* PHOTO SLOTS */
+.photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.photo-slot { border: 1px solid var(--border); background: #fff; padding: 12px; cursor: pointer; transition: border-color .2s; }
+.photo-slot:hover { border-color: var(--red); }
+.photo-slot img.thumb { width: 100%; height: 150px; object-fit: cover; display: block; margin-bottom: 8px; filter: grayscale(10%); }
+.photo-slot .ph-empty { width: 100%; height: 150px; background: #e8e4dd; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: #aaa; letter-spacing: .08em; margin-bottom: 8px; }
+.photo-slot label.slot-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .18em; color: var(--mid); display: block; margin-bottom: 6px; text-transform: uppercase; }
+.photo-slot .ok { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: green; display: none; margin-bottom: 4px; }
+.photo-slot textarea { width: 100%; font-size: 12px; border: 1px solid #ddd; padding: 5px 7px; resize: vertical; min-height: 44px; font-family: 'Source Serif 4', serif; }
+input[type=file] { display: none; }
+
+/* ACTION BAR */
+.action-bar { display: flex; gap: 12px; margin-top: 28px; padding-top: 20px; border-top: 1px solid #ddd; flex-wrap: wrap; }
+.btn { border: none; padding: 12px 28px; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+.btn-save { background: var(--red); color: #fff; }
+.btn-save:hover { background: #a01020; }
+.btn-index { background: var(--ink); color: #fff; }
+.btn-index:hover { background: #333; }
+.btn-delete { background: #fff; color: #c00; border: 1px solid #c00; }
+.btn-delete:hover { background: #fff0f0; }
+
+/* NOTICE */
+.notice { background: #e6f4e6; border: 1px solid #4caf50; color: #2a5c2a; padding: 10px 16px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .06em; margin-bottom: 20px; display: none; }
+.welcome { color: var(--mid); font-style: italic; padding: 60px 0; text-align: center; font-size: 18px; }
+.welcome strong { display: block; font-family: 'Playfair Display', serif; font-size: 28px; color: var(--ink); font-style: normal; margin-bottom: 10px; }
+
+/* RESPONSIVE */
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr; }
+  .photo-grid { grid-template-columns: 1fr; }
+}
+
+/* COPY-PASTE MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; width: 100%; max-width: 820px; max-height: 90vh; display: flex; flex-direction: column; border-top: 4px solid var(--red); }
+.modal-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--mid); line-height: 1; }
+.modal-close:hover { color: var(--red); }
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+.file-panel { margin-bottom: 24px; }
+.file-panel:last-child { margin-bottom: 0; }
+.file-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .2em; color: var(--mid); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+.copy-btn { background: var(--red); color: #fff; border: none; padding: 6px 16px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .1em; cursor: pointer; text-transform: uppercase; }
+.copy-btn.copied { background: green; }
+.file-textarea { width: 100%; height: 200px; font-family: monospace; font-size: 11px; border: 1px solid #ccc; padding: 8px; resize: vertical; background: #f7f4ed; color: #333; }
+.modal-instructions { background: #f0f7ff; border: 1px solid #b3d4f5; padding: 12px 16px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .04em; line-height: 1.7; margin-bottom: 20px; color: #1a3a5c; }
+.modal-instructions strong { display: block; margin-bottom: 4px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Global Tribune <span>SITE EDITOR</span></div>
+  <a class="site-link" href="index.html">← View Live Site</a>
+</div>
+
+<!-- COPY-PASTE MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Copy Files for GitHub</h3>
+      <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-instructions">
+        <strong>How to update GitHub:</strong>
+        1. Click <em>Copy</em> on a file below &nbsp;→&nbsp; 2. Go to your GitHub repo &nbsp;→&nbsp; 3. Click the filename &nbsp;→&nbsp; 4. Click the ✏️ pencil (Edit) button &nbsp;→&nbsp; 5. Select all (Ctrl+A / Cmd+A) &nbsp;→&nbsp; 6. Paste (Ctrl+V / Cmd+V) &nbsp;→&nbsp; 7. Click <em>Commit changes</em>. Repeat for each file.
+      </div>
+      <div id="modalPanels"></div>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h3>Articles</h3>
+    <ul class="article-list" id="articleList"></ul>
+    <button class="add-btn" onclick="newArticle()">+ New Article</button>
+  </aside>
+
+  <!-- EDITOR PANEL -->
+  <div class="editor-main" id="editorMain">
+    <div class="welcome">
+      <strong>Welcome to the Editor</strong>
+      Select an article to edit, or click <em>+ New Article</em> to create one.
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA STORE — articles saved in localStorage
+// ─────────────────────────────────────────────
+const STORE_KEY = 'globaltribune_articles';
+
+const DEFAULT_ARTICLES = [
+  {
+    id: 'article1_myanmar_atrocities',
+    section: 'Myanmar Crisis · Exclusive Report',
+    headline: 'Blood on All Sides: Massacres, Burned Villages and a War With No Innocents at Its Helm',
+    deck: 'As Myanmar\'s civil war enters its most brutal phase, investigative journalists document systematic atrocities committed by the military junta, resistance factions, and ethnic armed organisations alike — leaving civilians trapped between forces that claim to fight in their name.',
+    byline: 'James Alcott & Priya Suwan',
+    desk: 'Global Tribune Conflict Desk · Chiang Mai / Mae Sot',
+    date: '10 May 2026',
+    contentWarning: true,
+    body: `The dirt road into Thar Yar Kone village smells of ash. What remains of the settlement — seventeen homes, a monastery, a hand-pump well — is a scatter of scorched timber and corrugated iron, collapsed like broken ribs across the red earth. Twelve bodies were recovered here by local volunteers on the morning of 3 May. The perpetrators remain disputed.
+
+That uncertainty is itself the story. In a war that began with a coup and has since fractured into a labyrinth of competing armed groups, the line between liberator and oppressor has dissolved. International journalists who spent three weeks embedded across three separate conflict zones in Shan and Kayah states found evidence of mass executions, deliberate targeting of aid convoys, and systematic torture — carried out not only by Myanmar's ruling military council, the State Administration Council (SAC), but by elements within the People's Defence Forces (PDF) and several prominent ethnic resistance organisations.
+
+[PULLQUOTE] "We have documented summary executions by at least four distinct armed factions in the past sixty days alone. This is not a war with a good side." — Dr. Ananya Promchote, Human Rights Watch Field Director, Thailand [/PULLQUOTE]
+
+In the township of Loikaw, witnesses described SAC troops forcing families into a school compound before setting fire to the perimeter fence. Seventeen people died, according to testimony compiled by the Assistance Association for Political Prisoners. The junta has not responded to requests for comment.
+
+But forty kilometres east, in a region nominally under PDF control, residents spoke of a different terror. A village headman — who asked not to be named, fearing reprisal — described resistance fighters executing three men accused of being military informants. No trial was held.
+
+[PHOTO2]
+
+The Shan State Army – South, long regarded as one of the more disciplined ethnic armed organisations, has also faced credible allegations. Three aid workers from Médecins Sans Frontières described being detained for nine hours at an SSA-S checkpoint, during which their medical supplies were confiscated and one worker was beaten.
+
+The United Nations Office for the Coordination of Humanitarian Affairs estimates that 1.9 million people are currently displaced across Myanmar. Access for international aid organisations remains critically restricted. "We cannot reach people," said one OCHA coordinator. "There is no safe corridor. Every side uses humanitarian access as a bargaining chip."
+
+[PULLQUOTE] "There is no humanitarian space left. They have turned the suffering of civilians into a weapon." — OCHA Field Coordinator (name withheld for security) [/PULLQUOTE]
+
+Survivors interviewed for this report did not ask which faction to support. They asked when it would stop. An elderly woman in a displacement camp outside Taunggyi looked at this correspondent with something past exhaustion. "Everyone," she said, "has a gun and a reason. None of them have a heart."`,
+    photos: [
+      { b64: null, mime: null, caption: 'SHAN STATE, MYANMAR: The smouldering remains of a village destroyed in the ongoing conflict. Credit: Global Tribune' },
+      { b64: null, mime: null, caption: 'KAYAH STATE, MYANMAR: Armed fighters move through jungle terrain. Credit: Global Tribune' }
+    ],
+    relatedLinks: [
+      { href: 'article2_nato_warning.html', text: 'US and NATO allies issue formal warning over Myanmar atrocities' }
+    ]
+  },
+  {
+    id: 'article2_nato_warning',
+    section: 'United States · Foreign Policy · Breaking',
+    headline: 'Washington Issues Stark Warning as Myanmar Atrocities Mount: "The United States Will Not Look Away"',
+    deck: 'In an extraordinary address to the nation, the President invoked emergency foreign policy powers and threatened targeted sanctions, asset freezes and the possibility of direct military action — as NATO allies signal growing alarm over regional destabilisation.',
+    byline: 'Margaret Holt',
+    desk: 'Global Tribune Washington Bureau · Washington D.C.',
+    date: '10 May 2026',
+    contentWarning: false,
+    body: `The chamber was unusually full for a Sunday session. Senators who had been recalled from recess filed into the historic chamber as staff distributed classified briefing packets stamped with the seal of the National Security Council. What followed, witnesses say, was one of the most direct foreign policy warnings delivered from that podium in recent memory.
+
+Speaking for just under forty minutes, the President outlined what the White House is now calling a "threshold moment" in the Myanmar conflict — one that, if unchecked, risks drawing in regional powers and destabilising the broader Indo-Pacific security architecture that underpins American strategic interests.
+
+[NATOBOX] "The systematic murder of civilians, the destruction of villages, and the deliberate obstruction of humanitarian relief — by whichever armed actor carries them out — constitutes a crime against humanity under international law. The United States, in concert with its NATO partners, hereby places all factions operating in Myanmar on formal notice: continued atrocities will trigger a graduated response, beginning with the full weight of the American sanctions apparatus and escalating as circumstances demand. We are watching. We have the evidence. And the United States will not look away." [/NATOBOX]
+
+The statement, co-signed by the ambassadors of the United Kingdom, France, Germany, and Canada, represents the first time NATO as a collective body has formally addressed the Myanmar conflict.
+
+[PULLQUOTE] "This is not a threat made lightly. The President has put every faction in that country on notice. The question is whether any of them are listening." — Senator D. Hargrove, Chair, Senate Foreign Relations Committee [/PULLQUOTE]
+
+[PHOTO2]
+
+Senior administration officials said the NSC has drafted three escalating packages of measures. The first involves expanded asset freezes and visa bans targeting senior SAC commanders. The second would extend those measures to commanders within named ethnic armed organisations found to have committed atrocities. The third — described by one official as "the option nobody wants to reach for" — involves classified provisions the administration declined to characterise further.
+
+The Pentagon has separately confirmed that two US Navy vessels currently conducting freedom-of-navigation exercises in the Andaman Sea have been ordered to maintain their current positions "indefinitely, pending a reassessment of the security environment."
+
+Reaction from the international community was swift. The UN Secretary-General welcomed the statement as "a necessary signal," while Russia's Foreign Ministry described American involvement as "a cynical pretext for destabilisation." China urged "all parties to exercise restraint."
+
+Inside Myanmar, the response may be harder to gauge. For millions of civilians, news of Washington's warning may not arrive at all. Whether it becomes something more will depend on what comes next.`,
+    photos: [
+      { b64: null, mime: null, caption: 'WASHINGTON D.C.: The United States Senate chamber, where an emergency joint session was convened. Credit: U.S. Senate / Global Tribune' },
+      { b64: null, mime: null, caption: 'WHITE HOUSE, WASHINGTON D.C.: The President addresses the nation from the White House briefing room. Credit: White House / Global Tribune' }
+    ],
+    relatedLinks: [
+      { href: 'article1_myanmar_atrocities.html', text: 'Blood on All Sides: atrocities documented across all Myanmar factions' }
+    ]
+  }
+];
+
+function loadArticles() {
+  const saved = localStorage.getItem(STORE_KEY);
+  if (saved) {
+    try { return JSON.parse(saved); }
+    catch(e) {}
+  }
+  // First run: save defaults (without the baked images — user will re-add them)
+  localStorage.setItem(STORE_KEY, JSON.stringify(DEFAULT_ARTICLES));
+  return DEFAULT_ARTICLES;
+}
+
+function saveArticles(arts) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(arts));
+}
+
+let articles = loadArticles();
+let currentId = null;
+const photoData = {}; // temp store for newly chosen images: { slotIndex: {b64, mime} }
+
+// ─────────────────────────────────────────────
+//  SIDEBAR
+// ─────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('articleList');
+  list.innerHTML = '';
+  articles.forEach(a => {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.className = currentId === a.id ? 'active' : '';
+    btn.innerHTML = `<span class="art-section">${a.section}</span>${a.headline.slice(0, 60)}${a.headline.length > 60 ? '…' : ''}`;
+    btn.onclick = () => openArticle(a.id);
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  EDITOR
+// ─────────────────────────────────────────────
+function openArticle(id) {
+  currentId = id;
+  const a = articles.find(x => x.id === id);
+  renderSidebar();
+  renderEditor(a);
+}
+
+function renderEditor(a) {
+  const main = document.getElementById('editorMain');
+  main.innerHTML = `
+    <div class="notice" id="notice"></div>
+    <h2>Edit Article</h2>
+
+    <div class="field-group">
+      <label>Section / Desk Label</label>
+      <input type="text" id="f_section" value="${esc(a.section)}" placeholder="Myanmar Crisis · Exclusive Report" />
+    </div>
+    <div class="field-group">
+      <label>Headline</label>
+      <textarea class="headline-field" id="f_headline">${esc(a.headline)}</textarea>
+    </div>
+    <div class="field-group">
+      <label>Deck (standfirst / intro paragraph)</label>
+      <textarea class="deck-field" id="f_deck">${esc(a.deck)}</textarea>
+    </div>
+    <div class="field-group">
+      <label>Byline</label>
+      <input type="text" id="f_byline" value="${esc(a.byline)}" placeholder="Jane Smith & John Doe" />
+    </div>
+    <div class="field-group">
+      <label>Desk / Location</label>
+      <input type="text" id="f_desk" value="${esc(a.desk)}" placeholder="Global Tribune Conflict Desk · City" />
+    </div>
+    <div class="field-group">
+      <label>Date</label>
+      <input type="text" id="f_date" value="${esc(a.date)}" placeholder="10 May 2026" />
+    </div>
+    <div class="field-group">
+      <label>Content Warning? <small style="font-weight:400;letter-spacing:0">(tick for sensitive content)</small></label>
+      <input type="checkbox" id="f_cw" ${a.contentWarning ? 'checked' : ''} style="width:auto;margin-top:6px;transform:scale(1.4);" />
+    </div>
+
+    <div class="field-group">
+      <label>Body Text — Formatting tags you can use:</label>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--mid);margin-bottom:8px;line-height:1.8;">
+        <code>[PULLQUOTE] quote text — Attribution [/PULLQUOTE]</code> → styled pull quote<br>
+        <code>[NATOBOX] statement text [/NATOBOX]</code> → orange official statement box<br>
+        <code>[PHOTO2]</code> → inserts Photo 2 mid-article (Photo 1 always appears at top)<br>
+        Blank line between paragraphs = new paragraph
+      </div>
+      <textarea class="body-field" id="f_body">${esc(a.body)}</textarea>
+    </div>
+
+    <div class="field-group">
+      <label>Photos — Click a slot to swap the image</label>
+      <div class="photo-grid" id="photoGrid"></div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-save" onclick="showCopyPanel('article')">📋 Get Article HTML</button>
+      <button class="btn btn-index" onclick="showCopyPanel('index')">📋 Get Homepage HTML</button>
+      <button class="btn btn-index" onclick="showCopyPanel('both')" style="background:#444;">📋 Get Both Files</button>
+      <button class="btn btn-delete" onclick="deleteArticle('${a.id}')">Delete Article</button>
+    </div>
+  `;
+  buildPhotoSlots(a);
+}
+
+function buildPhotoSlots(a) {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  (a.photos || []).forEach((ph, i) => {
+    const div = document.createElement('div');
+    div.className = 'photo-slot';
+    div.onclick = () => document.getElementById('ffile_'+i).click();
+
+    const hasImage = photoData[i]?.b64 || ph.b64;
+    const src = photoData[i]?.b64
+      ? `data:${photoData[i].mime};base64,${photoData[i].b64}`
+      : (ph.b64 ? `data:${ph.mime};base64,${ph.b64}` : null);
+
+    div.innerHTML = `
+      <span class="slot-label">Photo ${i+1}${i===0?' (top of article)':' (mid article — use [PHOTO2] tag)'}</span>
+      ${src ? `<img class="thumb" src="${src}" />` : '<div class="ph-empty">+ Click to choose image</div>'}
+      <div class="ok" id="ok_${i}" style="${photoData[i]?.b64 ? 'display:block' : ''}">✓ New image loaded</div>
+      <textarea onclick="event.stopPropagation()" id="cap_${i}" placeholder="Caption text…">${esc(ph.caption||'')}</textarea>
+      <input type="file" id="ffile_${i}" accept="image/*" onchange="handlePhoto(${i}, this)" />
+    `;
+    grid.appendChild(div);
+  });
+
+  // Add slot button
+  const addDiv = document.createElement('div');
+  addDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;border:1px dashed #bbb;background:#f7f4ed;cursor:pointer;min-height:80px;font-family:Barlow Condensed,sans-serif;font-size:13px;color:#aaa;letter-spacing:.08em;';
+  addDiv.textContent = '+ Add another photo slot';
+  addDiv.onclick = () => {
+    const art = articles.find(x => x.id === currentId);
+    art.photos.push({ b64: null, mime: null, caption: '' });
+    saveArticles(articles);
+    buildPhotoSlots(art);
+  };
+  grid.appendChild(addDiv);
+}
+
+function handlePhoto(idx, input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+  const mime = file.type;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const full = e.target.result; // data:mime;base64,XXXXX
+    const b64 = full.split(',')[1];
+    photoData[idx] = { b64, mime };
+    document.getElementById('ok_'+idx).style.display = 'block';
+    // Update preview
+    const slot = input.closest('.photo-slot');
+    const existing = slot.querySelector('img.thumb');
+    if (existing) { existing.src = full; }
+    else {
+      const empty = slot.querySelector('.ph-empty');
+      if (empty) {
+        const img = document.createElement('img');
+        img.className = 'thumb';
+        img.src = full;
+        slot.insertBefore(img, empty);
+        empty.remove();
+      }
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─────────────────────────────────────────────
+//  SAVE & EXPORT
+// ─────────────────────────────────────────────
+function collectFormData() {
+  const art = articles.find(x => x.id === currentId);
+  art.section  = document.getElementById('f_section').value;
+  art.headline = document.getElementById('f_headline').value;
+  art.deck     = document.getElementById('f_deck').value;
+  art.byline   = document.getElementById('f_byline').value;
+  art.desk     = document.getElementById('f_desk').value;
+  art.date     = document.getElementById('f_date').value;
+  art.contentWarning = document.getElementById('f_cw').checked;
+  art.body     = document.getElementById('f_body').value;
+
+  // Merge photo data
+  art.photos.forEach((ph, i) => {
+    if (photoData[i]) {
+      ph.b64  = photoData[i].b64;
+      ph.mime = photoData[i].mime;
+    }
+    const capEl = document.getElementById('cap_'+i);
+    if (capEl) ph.caption = capEl.value;
+  });
+
+  saveArticles(articles);
+  return art;
+}
+
+// ─────────────────────────────────────────────
+//  COPY-PASTE PANEL
+// ─────────────────────────────────────────────
+function showCopyPanel(what) {
+  const art = collectFormData();
+  renderSidebar();
+
+  const panels = [];
+  if (what === 'article' || what === 'both') {
+    panels.push({ filename: art.id + '.html', html: buildArticleHTML(art) });
+  }
+  if (what === 'index' || what === 'both') {
+    panels.push({ filename: 'index.html', html: buildIndexHTML() });
+  }
+
+  document.getElementById('modalTitle').textContent =
+    what === 'both' ? 'Copy Files for GitHub (do each one)' : 'Copy File for GitHub';
+
+  const container = document.getElementById('modalPanels');
+  container.innerHTML = '';
+  panels.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'file-panel';
+    div.innerHTML = `
+      <div class="file-label">
+        <span>📄 ${p.filename}</span>
+        <button class="copy-btn" id="copybtn_${i}" onclick="copyText('ta_${i}', 'copybtn_${i}')">Copy</button>
+      </div>
+      <textarea class="file-textarea" id="ta_${i}" readonly>${p.html.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+    `;
+    container.appendChild(div);
+  });
+
+  document.getElementById('modalOverlay').classList.add('open');
+  showNotice('Panel open — copy each file and paste into GitHub.');
+}
+
+function copyText(taId, btnId) {
+  const ta = document.getElementById(taId);
+  // Use decoded text (not the escaped HTML display version)
+  const idx = taId.split('_')[1];
+  const art = articles.find(x => x.id === currentId);
+  // Re-generate clean html for copying
+  let content;
+  const panels = document.getElementById('modalPanels').querySelectorAll('.file-panel');
+  const filename = panels[idx].querySelector('.file-label span').textContent.replace('📄 ','').trim();
+  if (filename === 'index.html') {
+    content = buildIndexHTML();
+  } else {
+    content = buildArticleHTML(art);
+  }
+  navigator.clipboard.writeText(content).then(() => {
+    const btn = document.getElementById(btnId);
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 3000);
+  }).catch(() => {
+    // Fallback for browsers that block clipboard
+    ta.select();
+    document.execCommand('copy');
+    const btn = document.getElementById(btnId);
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 3000);
+  });
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+function saveAndExport(what) { showCopyPanel(what); } // legacy alias
+
+function downloadFile(html, filename) {
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function showNotice(msg) {
+  const el = document.getElementById('notice');
+  if (!el) return;
+  el.textContent = '✓ ' + msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+// ─────────────────────────────────────────────
+//  NEW ARTICLE
+// ─────────────────────────────────────────────
+function newArticle() {
+  const id = 'article_' + Date.now();
+  const blank = {
+    id,
+    section: 'World News',
+    headline: 'New Article Headline',
+    deck: 'A brief introduction to the story.',
+    byline: 'Staff Reporter',
+    desk: 'Global Tribune · City',
+    date: new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }),
+    contentWarning: false,
+    body: 'Write your article here.\n\nUse blank lines to separate paragraphs.\n\n[PULLQUOTE] A notable quote here — Source Name [/PULLQUOTE]\n\n[PHOTO2]\n\nContinue the article after the second photo.',
+    photos: [
+      { b64: null, mime: null, caption: 'Caption for photo 1.' },
+      { b64: null, mime: null, caption: 'Caption for photo 2.' }
+    ],
+    relatedLinks: []
+  };
+  articles.push(blank);
+  saveArticles(articles);
+  openArticle(id);
+}
+
+// ─────────────────────────────────────────────
+//  DELETE
+// ─────────────────────────────────────────────
+function deleteArticle(id) {
+  if (!confirm('Delete this article? This cannot be undone.')) return;
+  articles = articles.filter(a => a.id !== id);
+  saveArticles(articles);
+  currentId = null;
+  renderSidebar();
+  document.getElementById('editorMain').innerHTML = '<div class="welcome"><strong>Article deleted</strong>Select another article or create a new one.</div>';
+}
+
+// ─────────────────────────────────────────────
+//  HTML BUILDERS
+// ─────────────────────────────────────────────
+const SHARED_CSS = `
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --ink: #1a1a1a; --paper: #f5f0e8; --red: #c0172a; --mid: #5a5a5a; --rule: #2a2a2a; --warn: #ff6a00; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4', Georgia, serif; font-size: 17px; line-height: 1.7; }
+  header { border-top: 5px solid var(--rule); border-bottom: 2px solid var(--rule); text-align: center; padding: 18px 24px 12px; background: var(--paper); position: sticky; top: 0; z-index: 100; }
+  .masthead-top { display: flex; align-items: center; justify-content: space-between; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: .08em; color: var(--mid); margin-bottom: 8px; }
+  .masthead-top span.live { background: var(--red); color: #fff; padding: 2px 7px; font-weight: 700; letter-spacing: .12em; }
+  .site-name { font-family: 'Playfair Display', serif; font-size: clamp(32px, 5vw, 64px); font-weight: 900; letter-spacing: -.01em; line-height: 1; }
+  .tagline { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: .25em; color: var(--mid); margin-top: 4px; }
+  .ticker-wrap { background: var(--rule); color: #fff; overflow: hidden; padding: 6px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; }
+  .ticker-track { display: inline-block; white-space: nowrap; animation: ticker 30s linear infinite; }
+  .ticker-track span { margin: 0 48px; }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  nav.sitenav { background: #fff; border-bottom: 1px solid #ddd; padding: 10px 24px; display: flex; gap: 24px; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; flex-wrap: wrap; }
+  nav.sitenav a { color: var(--ink); text-decoration: none; }
+  nav.sitenav a:hover { color: var(--red); }
+  .page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+  .content-warning { border: 2px solid var(--ink); background: #fff8f0; padding: 14px 20px; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; color: #333; margin-bottom: 40px; }
+  .content-warning strong { color: var(--red); }
+  .section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--red); border-top: 3px solid var(--red); padding-top: 8px; margin-bottom: 14px; }
+  h1.headline { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 44px); font-weight: 900; line-height: 1.15; margin-bottom: 14px; }
+  .deck { font-size: 19px; font-weight: 300; color: #2a2a2a; border-left: 3px solid var(--red); padding-left: 14px; margin-bottom: 20px; font-style: italic; }
+  .byline-row { display: flex; align-items: center; gap: 16px; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 8px 0; margin-bottom: 28px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: var(--mid); flex-wrap: wrap; }
+  .byline-row .author { font-weight: 700; color: var(--ink); }
+  .byline-row .dot { color: #bbb; }
+  figure { margin: 28px 0; }
+  figure img { width: 100%; display: block; filter: grayscale(15%) contrast(1.05); border: 1px solid #ccc; }
+  figcaption { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: var(--mid); margin-top: 6px; border-left: 2px solid #ccc; padding-left: 10px; }
+  figcaption strong { color: var(--ink); }
+  blockquote.pull { border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 16px 0; margin: 32px 0; font-family: 'Playfair Display', serif; font-size: 22px; font-style: italic; line-height: 1.4; }
+  blockquote.pull cite { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-style: normal; letter-spacing: .1em; color: var(--mid); margin-top: 8px; }
+  .nato-box { background: #fff; border: 2px solid var(--ink); border-left: 6px solid var(--warn); padding: 18px 22px; margin: 32px 0; }
+  .nato-box .nato-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .2em; color: var(--warn); margin-bottom: 6px; }
+  .nato-box p { font-size: 15px; }
+  p { margin-bottom: 18px; }
+  .related { background: var(--ink); color: #fff; padding: 20px 24px; margin-top: 40px; }
+  .related h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: .2em; color: #aaa; margin-bottom: 12px; }
+  .related ul { list-style: none; }
+  .related ul li { font-family: 'Playfair Display', serif; font-size: 16px; padding: 8px 0; border-bottom: 1px solid #333; }
+  .related ul li:last-child { border-bottom: none; }
+  .related ul li::before { content: "→ "; color: var(--red); }
+  .related ul li a { color: #fff; text-decoration: none; }
+`;
+
+const SHARED_HEADER = (date, tag) => `
+<header>
+  <div class="masthead-top">
+    <span>${date}</span>
+    <span class="live">● ${tag}</span>
+    <span>GLOBAL TRIBUNE</span>
+  </div>
+  <div class="site-name">Global Tribune</div>
+  <div class="tagline">INDEPENDENT · INTERNATIONAL · UNCOMPROMISING</div>
+</header>`;
+
+const SHARED_NAV = () => {
+  const links = articles.map(a => `<a href="${a.id}.html">${a.section.split('·')[0].trim()}</a>`).join('\n  ');
+  return `<nav class="sitenav"><a href="index.html">Home</a>\n  ${links}\n  <a href="editor.html" style="color:#c0172a;">✏ Editor</a>\n</nav>`;
+};
+
+const TICKER = `<div class="ticker-wrap"><div class="ticker-track">
+  <span>MYANMAR: UN estimates over 3,200 civilian deaths in Shan State since January</span>
+  <span>WASHINGTON: Emergency session of Senate Foreign Relations Committee convened</span>
+  <span>PENTAGON: Two US Navy vessels ordered to hold in Andaman Sea indefinitely</span>
+  <span>BANGKOK: Refugee numbers at Thai border exceed 85,000 this quarter</span>
+  <span>MYANMAR: UN estimates over 3,200 civilian deaths in Shan State since January</span>
+  <span>WASHINGTON: Emergency session of Senate Foreign Relations Committee convened</span>
+  <span>PENTAGON: Two US Navy vessels ordered to hold in Andaman Sea indefinitely</span>
+  <span>BANGKOK: Refugee numbers at Thai border exceed 85,000 this quarter</span>
+</div></div>`;
+
+function imgTag(ph, alt) {
+  if (!ph || !ph.b64) return `<div style="background:#ddd;width:100%;height:260px;display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;color:#999;font-size:14px;border:1px solid #ccc;">No image uploaded</div>`;
+  return `<img src="data:${ph.mime};base64,${ph.b64}" alt="${alt}" />`;
+}
+
+function parseBody(body, photos) {
+  const lines = body.split('\n');
+  let html = '';
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (!line) { i++; continue; }
+
+    if (line.startsWith('[PULLQUOTE]')) {
+      const full = lines.slice(i).join('\n');
+      const match = full.match(/\[PULLQUOTE\]([\s\S]*?)\[\/PULLQUOTE\]/);
+      if (match) {
+        const parts = match[1].trim().split(' — ');
+        const quote = parts[0].trim();
+        const cite  = parts.slice(1).join(' — ').trim();
+        html += `<blockquote class="pull">${quote}${cite ? `<cite>— ${cite}</cite>` : ''}</blockquote>\n`;
+        const consumed = match[0].split('\n').length;
+        i += consumed;
+        continue;
+      }
+    }
+
+    if (line.startsWith('[NATOBOX]')) {
+      const full = lines.slice(i).join('\n');
+      const match = full.match(/\[NATOBOX\]([\s\S]*?)\[\/NATOBOX\]/);
+      if (match) {
+        html += `<div class="nato-box"><div class="nato-label">⚑ OFFICIAL STATEMENT</div><p>${match[1].trim()}</p></div>\n`;
+        const consumed = match[0].split('\n').length;
+        i += consumed;
+        continue;
+      }
+    }
+
+    if (line === '[PHOTO2]') {
+      const ph = photos[1];
+      if (ph) {
+        html += `<figure>${imgTag(ph, 'Article photo 2')}<figcaption>${ph.caption || ''}</figcaption></figure>\n`;
+      }
+      i++;
+      continue;
+    }
+
+    html += `<p>${line}</p>\n`;
+    i++;
+  }
+  return html;
+}
+
+function buildArticleHTML(a) {
+  const ph0 = a.photos[0];
+  const relLinks = (a.relatedLinks || []).map(l => `<li><a href="${l.href}">${l.text}</a></li>`).join('\n');
+  const otherArts = articles.filter(x => x.id !== a.id).map(x => `<li><a href="${x.id}.html">${x.headline.slice(0,80)}…</a></li>`).join('\n');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Tribune – ${a.headline.slice(0,60)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>${SHARED_CSS}</style>
+</head>
+<body>
+${SHARED_HEADER(a.date, 'LIVE UPDATES')}
+${SHARED_NAV()}
+${TICKER}
+<main class="page">
+${a.contentWarning ? '<div class="content-warning"><strong>⚠ CONTENT WARNING:</strong> This article contains detailed descriptions of violence and human rights violations. Reader discretion is advised.</div>' : ''}
+<div class="section-label">${a.section}</div>
+<h1 class="headline">${a.headline}</h1>
+<p class="deck">${a.deck}</p>
+<div class="byline-row">
+  <span class="author">${a.byline}</span><span class="dot">·</span>
+  <span>${a.desk}</span><span class="dot">·</span>
+  <span>${a.date}</span>
+</div>
+<figure>
+${imgTag(ph0, a.headline)}
+<figcaption>${ph0?.caption || ''}</figcaption>
+</figure>
+${parseBody(a.body, a.photos)}
+<div class="related">
+  <h3>ALSO DEVELOPING</h3>
+  <ul>
+${relLinks}
+${otherArts}
+  </ul>
+</div>
+</main>
+</body>
+</html>`;
+}
+
+function buildIndexHTML() {
+  const cards = articles.map(a => {
+    const ph = a.photos[0];
+    const imgSrc = ph?.b64 ? `data:${ph.mime};base64,${ph.b64}` : '';
+    return `
+  <div class="card">
+    ${imgSrc ? `<a href="${a.id}.html"><img class="card-img" src="${imgSrc}" alt="${a.headline}" /></a>` : '<div class="card-img-empty"></div>'}
+    <div class="card-body">
+      <span class="section-label">${a.section}</span>
+      <h2><a href="${a.id}.html">${a.headline}</a></h2>
+      <p class="standfirst">${a.deck.slice(0, 160)}…</p>
+      <div class="byline"><strong>${a.byline}</strong> · ${a.date}</div>
+      <a class="read-more" href="${a.id}.html">Read Full Report →</a>
+    </div>
+  </div>`;
+  }).join('\n');
+
+  const navLinks = articles.map(a => `<a href="${a.id}.html">${a.section.split('·')[0].trim()}</a>`).join('\n  ');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Tribune</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+${SHARED_CSS}
+.page { max-width: 1100px; }
+.edition-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+.edition-bar .ed-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .22em; color: #fff; background: var(--ink); padding: 3px 10px; }
+.edition-bar hr { flex: 1; border: none; border-top: 1px solid #ccc; }
+.cards { display: flex; flex-direction: column; gap: 40px; }
+.card { display: grid; grid-template-columns: 380px 1fr; gap: 28px; border-bottom: 1px solid #ccc; padding-bottom: 36px; }
+@media (max-width: 700px) { .card { grid-template-columns: 1fr; } }
+.card-img { width: 100%; height: 240px; object-fit: cover; display: block; filter: grayscale(15%) contrast(1.05); border: 1px solid #ccc; }
+.card-img-empty { width: 100%; height: 240px; background: #ddd; }
+.card h2 { font-family: 'Playfair Display', serif; font-size: clamp(20px, 2.5vw, 30px); font-weight: 900; line-height: 1.2; margin-bottom: 10px; }
+.card h2 a { color: var(--ink); text-decoration: none; }
+.card h2 a:hover { color: var(--red); }
+.standfirst { font-size: 15px; font-style: italic; color: #333; margin-bottom: 10px; line-height: 1.55; }
+.byline { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: var(--mid); margin-bottom: 14px; }
+.byline strong { color: var(--ink); }
+.read-more { display: inline-block; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: var(--red); padding: 9px 20px; text-decoration: none; }
+.read-more:hover { background: #a01020; }
+footer { background: var(--rule); color: #aaa; text-align: center; padding: 24px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: .1em; }
+footer strong { color: #fff; }
+</style>
+</head>
+<body>
+<header>
+  <div class="masthead-top">
+    <span>${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase()}</span>
+    <span class="live">● LIVE UPDATES</span>
+    <span>EST. 2026</span>
+  </div>
+  <div class="site-name">Global Tribune</div>
+  <div class="tagline">INDEPENDENT · INTERNATIONAL · UNCOMPROMISING</div>
+</header>
+<nav class="sitenav">
+  <a href="index.html">Home</a>
+  ${navLinks}
+</nav>
+${TICKER}
+<main class="page" style="padding-top:40px;padding-bottom:80px;margin:0 auto;">
+  <div class="edition-bar">
+    <span class="ed-label">TODAY'S EDITION</span>
+    <hr>
+  </div>
+  <div class="cards">
+${cards}
+  </div>
+</main>
+<footer><strong>Global Tribune</strong> · Independent International Reporting</footer>
+</body>
+</html>`;
+}
+
+// ─────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────
+function esc(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+renderSidebar();
+</script>
+</body>
+</html>
