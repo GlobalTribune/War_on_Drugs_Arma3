@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Tribune</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --ink: #1a1a1a; --paper: #f5f0e8; --red: #c0172a; --mid: #5a5a5a; --rule: #2a2a2a; --warn: #ff6a00; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4', Georgia, serif; font-size: 17px; line-height: 1.7; }
+  header { border-top: 5px solid var(--rule); border-bottom: 2px solid var(--rule); text-align: center; padding: 18px 24px 12px; background: var(--paper); position: sticky; top: 0; z-index: 100; }
+  .masthead-top { display: flex; align-items: center; justify-content: space-between; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: .08em; color: var(--mid); margin-bottom: 8px; }
+  .masthead-top span.live { background: var(--red); color: #fff; padding: 2px 7px; font-weight: 700; letter-spacing: .12em; }
+  .site-name { font-family: 'Playfair Display', serif; font-size: clamp(32px, 5vw, 64px); font-weight: 900; letter-spacing: -.01em; line-height: 1; }
+  .tagline { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: .25em; color: var(--mid); margin-top: 4px; }
+  .ticker-wrap { background: var(--rule); color: #fff; overflow: hidden; padding: 6px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .06em; }
+  .ticker-track { display: inline-block; white-space: nowrap; animation: ticker 35s linear infinite; }
+  .ticker-track span { margin: 0 48px; }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  nav.sitenav { background: #fff; border-bottom: 1px solid #ddd; padding: 10px 24px; display: flex; gap: 24px; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; flex-wrap: wrap; }
+  nav.sitenav a { color: var(--ink); text-decoration: none; }
+  nav.sitenav a:hover { color: var(--red); }
+  .page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+  .section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--red); border-top: 3px solid var(--red); padding-top: 8px; margin-bottom: 14px; }
+  h1.headline { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 44px); font-weight: 900; line-height: 1.15; margin-bottom: 14px; letter-spacing: -.01em; }
+  .deck { font-size: 19px; font-weight: 300; color: #2a2a2a; border-left: 3px solid var(--red); padding-left: 14px; margin-bottom: 20px; font-style: italic; }
+  .byline-row { display: flex; align-items: center; gap: 16px; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 8px 0; margin-bottom: 28px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .06em; color: var(--mid); flex-wrap: wrap; }
+  .byline-row .author { font-weight: 700; color: var(--ink); }
+  .byline-row .dot { color: #bbb; }
+  figure.photo-placeholder { background: #e8e4db; border: 2px dashed #bbb; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 260px; margin: 28px 0; }
+  figure.photo-placeholder .ph-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .1em; color: #999; margin-bottom: 6px; }
+  figure.photo-placeholder .ph-hint { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: #bbb; letter-spacing: .06em; }
+  figure img { width: 100%; display: block; filter: grayscale(15%) contrast(1.05); border: 1px solid #ccc; }
+  figcaption { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: var(--mid); margin-top: 6px; letter-spacing: .03em; border-left: 2px solid #ccc; padding-left: 10px; }
+  figcaption strong { color: var(--ink); }
+  blockquote.pull { border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 16px 0; margin: 32px 0; font-family: 'Playfair Display', serif; font-size: 22px; font-style: italic; line-height: 1.4; color: #1a1a1a; }
+  blockquote.pull cite { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-style: normal; letter-spacing: .1em; color: var(--mid); margin-top: 8px; }
+  .intel-box { background: #fff; border: 2px solid var(--ink); border-left: 6px solid var(--warn); padding: 18px 22px; margin: 32px 0; }
+  .intel-box .box-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .2em; color: var(--warn); margin-bottom: 6px; }
+  .intel-box p { font-size: 15px; }
+  p { margin-bottom: 18px; }
+  .related { background: var(--ink); color: #fff; padding: 20px 24px; margin-top: 40px; }
+  .related h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: .2em; color: #aaa; margin-bottom: 12px; }
+  .related ul { list-style: none; }
+  .related ul li { font-family: 'Playfair Display', serif; font-size: 16px; padding: 8px 0; border-bottom: 1px solid #333; }
+  .related ul li:last-child { border-bottom: none; }
+  .related ul li::before { content: "\2192 "; color: var(--red); }
+  .related ul li a { color: #fff; text-decoration: none; }
+  .related ul li a:hover { color: #ddd; }
+  footer { background: var(--rule); color: #aaa; text-align: center; padding: 20px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: .1em; }
+  footer strong { color: #fff; }
+
+.page { max-width: 1100px; }
+.edition-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; }
+.edition-bar .ed-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .22em; color: #fff; background: var(--ink); padding: 3px 10px; }
+.edition-bar hr { flex: 1; border: none; border-top: 1px solid #ccc; }
+.cards { display: flex; flex-direction: column; gap: 44px; }
+.card { display: grid; grid-template-columns: 380px 1fr; gap: 32px; border-bottom: 1px solid #ccc; padding-bottom: 40px; align-items: start; }
+@media (max-width: 720px) { .card { grid-template-columns: 1fr; } }
+.card-img-ph { width: 100%; height: 240px; background: #e0dbd0; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: #aaa; letter-spacing: .08em; border: 1px dashed #bbb; }
+.card h2 { font-family: 'Playfair Display', serif; font-size: clamp(20px, 2.5vw, 30px); font-weight: 900; line-height: 1.2; margin-bottom: 10px; }
+.card h2 a { color: var(--ink); text-decoration: none; }
+.card h2 a:hover { color: var(--red); }
+.standfirst { font-size: 15px; font-style: italic; color: #333; margin-bottom: 12px; line-height: 1.6; }
+.byline { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: var(--mid); margin-bottom: 16px; }
+.byline strong { color: var(--ink); }
+.read-more { display: inline-block; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: var(--red); padding: 9px 20px; text-decoration: none; }
+.read-more:hover { background: #a01020; }
+</style>
+</head>
+<body>
+<header>
+  <div class="masthead-top">
+    <span>Wednesday, 16 April 2025</span>
+    <span class="live">&#9679; LIVE UPDATES</span>
+    <span>CONFLICT &amp; CRIME DESK</span>
+  </div>
+  <div class="site-name">Global Tribune</div>
+  <div class="tagline">INDEPENDENT &middot; INTERNATIONAL &middot; UNCOMPROMISING</div>
+</header>
+<nav class="sitenav">
+  <a href="index.html">Home</a>
+  <a href="article1_convoy_strike.html">Convoy Strike</a>
+  <a href="article2_dea_raid.html">DEA Raid</a>
+  <a href="editor.html" style="color:var(--red);">&#9998; Editor</a>
+</nav>
+<div class="ticker-wrap"><div class="ticker-track">
+    <span>MEXICO: Authorities confirm destruction of narco convoy on Federal Highway 2</span>
+    <span>FLORIDA: Two individuals taken into custody following DEA raid &mdash; identities withheld</span>
+    <span>DOJ: Anti-money laundering investigation launched into major North American logistics firm</span>
+    <span>GULF COAST: Unidentified island location emerges as suspected cartel transit hub</span>
+    <span>SOCOM: Senior command reviewing intelligence package forwarded by DEA field teams</span>
+    <span>MEXICO: Authorities confirm destruction of narco convoy on Federal Highway 2</span>
+    <span>FLORIDA: Two individuals taken into custody following DEA raid &mdash; identities withheld</span>
+    <span>DOJ: Anti-money laundering investigation launched into major North American logistics firm</span>
+    <span>GULF COAST: Unidentified island location emerges as suspected cartel transit hub</span>
+    <span>SOCOM: Senior command reviewing intelligence package forwarded by DEA field teams</span>
+  </div></div>
+<main class="page" style="padding: 40px 24px 80px; margin: 0 auto;">
+  <div class="edition-bar">
+    <span class="ed-label">TODAY&rsquo;S EDITION</span>
+    <hr>
+  </div>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-img-ph">+ Add photo via Editor</div>
+      <div>
+        <span class="section-label">United States &middot; Law Enforcement &middot; Exclusive</span>
+        <h2><a href="article2_dea_raid.html">DEA Raid Seizes $187 Million in Cocaine and Uncovers Intelligence That Has Reached JSOC</a></h2>
+        <p class="standfirst">A no-knock warrant executed by DEA Special Response Team agents in Florida has yielded one of the largest domestic cocaine seizures in recent years &mdash; and a laptop whose contents have escalated the investigation to the highest levels of US special operations command.</p>
+        <div class="byline"><strong>Patricia Walsh</strong> &middot; Washington Bureau &middot; 16 April 2025</div>
+        <a class="read-more" href="article2_dea_raid.html">Read Full Report &rarr;</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-img-ph">+ Add photo via Editor</div>
+      <div>
+        <span class="section-label">Mexico &middot; Narcotics &middot; Breaking</span>
+        <h2><a href="article1_convoy_strike.html">$90 Million Cocaine Convoy Destroyed in Mexico as Cartel Supply Chain Unravels</a></h2>
+        <p class="standfirst">Mexican authorities, backed by undisclosed US partners, intercepted and destroyed a major narcotics convoy before it could cross into American territory &mdash; seizing intelligence that has thrown a prominent logistics firm into the centre of a federal investigation.</p>
+        <div class="byline"><strong>Carlos Mendez &amp; Sarah Okafor</strong> &middot; Mexico City / Washington Bureau &middot; 13 April 2025</div>
+        <a class="read-more" href="article1_convoy_strike.html">Read Full Report &rarr;</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+<footer><strong>Global Tribune</strong> &middot; Independent International Reporting</footer>
+</body>
+</html>
